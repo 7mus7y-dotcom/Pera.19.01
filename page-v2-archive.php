@@ -209,8 +209,9 @@ if ( ! empty( $tax_query ) ) {
 // ------------------------------------------------------------
 $meta_query = array();
 
-// V2 Beds filter (radio) -> v2_index_flat LIKE "|2|"
-if ( $selected_beds !== '' && preg_match( '/^\d+$/', $selected_beds ) ) {
+// V2 Beds filter (radio) -> v2_index_flat LIKE "|2|"                    <form id="property-filter-form" 
+                          class="property-filters" 
+                          method="get" action="<?php echo esc_url( $archive_base_url ); ?>">
   $b = (int) $selected_beds;
 
   $meta_query[] = array(
