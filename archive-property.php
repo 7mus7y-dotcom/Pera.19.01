@@ -413,19 +413,122 @@ if ( $is_filtered_search ) {
         <div class="content-panel-box">
 
             <div class="property-filters-wrapper">
-                <header class="section-header">
-                    <h2>Available properties</h2>
-                    <p>Use the filters below to refine by district, property type, bedrooms and budget.</p>
-                </header>
-
                 <form
                     method="get"
                     class="property-filters"
                     action="<?php echo esc_url( $archive_base_url ); ?>"
                 >
+                    <div class="property-results-bar property-results-bar--with-filters">
+                        <div class="property-results-bar__left">
+                            <button
+                                type="button"
+                                class="btn btn--ghost btn--blue property-filters__toggle"
+                                data-filters-toggle
+                                aria-expanded="false"
+                                aria-controls="property-filters-dialog"
+                            >
+                                <svg class="icon icon-filter" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" focusable="false">
+                                    <path
+                                        d="M3 5h18l-7 8v5l-4 2v-7L3 5z"
+                                        fill="currentColor"
+                                    ></path>
+                                </svg>
+                                Filters
+                            </button>
 
-                    <!-- ===== TOP ROW: PRICE / TYPE / BEDROOMS ===== -->
-                    <div class="filter-row">
+                            <div class="property-results-count">
+                                <?php echo intval( $property_query->found_posts ); ?> properties found
+                            </div>
+                        </div>
+
+                        <div class="property-sort">
+                            <span class="property-sort__label">Sort by:</span>
+
+                            <input
+                                type="hidden"
+                                name="sort"
+                                id="sort-input"
+                                value="<?php echo esc_attr( $sort ); ?>"
+                            >
+
+                            <div class="property-sort__pills">
+
+                                <button
+                                    type="button"
+                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'date_desc' || $sort === '' ) ? 'pill--active' : ''; ?>"
+                                    data-sort="date_desc"
+                                >
+                                    Newest first
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'date_asc' ) ? 'pill--active' : ''; ?>"
+                                    data-sort="date_asc"
+                                >
+                                    Oldest first
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'price_asc' ) ? 'pill--active' : ''; ?>"
+                                    data-sort="price_asc"
+                                >
+                                    Price (Low → High)
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'price_desc' ) ? 'pill--active' : ''; ?>"
+                                    data-sort="price_desc"
+                                >
+                                    Price (High → Low)
+                                </button>
+
+                            </div>
+                        </div>
+                    </div><!-- /.property-results-bar -->
+
+                    <noscript>
+                        <style>
+                            .property-filters__toggle { display: none; }
+                            .property-filters-dialog { display: block !important; position: static !important; }
+                            .property-filters-dialog__overlay { display: none !important; }
+                            .property-filters-dialog__panel {
+                                position: static !important;
+                                max-width: none !important;
+                                height: auto !important;
+                                box-shadow: none !important;
+                                border-radius: 0 !important;
+                                padding: 0 !important;
+                            }
+                        </style>
+                    </noscript>
+
+                    <div
+                        class="property-filters-dialog"
+                        id="property-filters-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                    >
+                        <div class="property-filters-dialog__overlay" data-filters-overlay></div>
+                        <div class="property-filters-dialog__panel" role="document" tabindex="-1">
+                            <header class="section-header property-filters-dialog__header">
+                                <div class="property-filters-dialog__title">
+                                    <h2>Available properties</h2>
+                                    <p>Use the filters below to refine by district, property type, bedrooms and budget.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="btn btn--ghost btn--black property-filters-dialog__close"
+                                    data-filters-close
+                                >
+                                    Close
+                                </button>
+                            </header>
+
+                            <!-- ===== TOP ROW: PRICE / TYPE / BEDROOMS ===== -->
+                            <div class="filter-row">
 
                         <!-- PRICE RANGE -->
                         <div class="filter-group">
@@ -699,60 +802,8 @@ if ( $is_filtered_search ) {
 
                     </div><!-- /.filter-row -->
 
-                    <!-- RESULTS SUMMARY + SORT -->
-                    <div class="property-results-bar">
-
-                        <div class="property-results-count">
-                            <?php echo intval( $property_query->found_posts ); ?> properties found
-                        </div>
-
-                        <div class="property-sort">
-                            <span class="property-sort__label">Sort by:</span>
-
-                            <input
-                                type="hidden"
-                                name="sort"
-                                id="sort-input"
-                                value="<?php echo esc_attr( $sort ); ?>"
-                            >
-
-                            <div class="property-sort__pills">
-
-                                <button
-                                    type="button"
-                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'date_desc' || $sort === '' ) ? 'pill--active' : ''; ?>"
-                                    data-sort="date_desc"
-                                >
-                                    Newest first
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'date_asc' ) ? 'pill--active' : ''; ?>"
-                                    data-sort="date_asc"
-                                >
-                                    Oldest first
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'price_asc' ) ? 'pill--active' : ''; ?>"
-                                    data-sort="price_asc"
-                                >
-                                    Price (Low → High)
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="pill pill--outline sort-pill <?php echo ( $sort === 'price_desc' ) ? 'pill--active' : ''; ?>"
-                                    data-sort="price_desc"
-                                >
-                                    Price (High → Low)
-                                </button>
-
-                            </div>
-                        </div>
-                    </div><!-- /.property-results-bar -->
+                        </div><!-- /.property-filters-dialog__panel -->
+                    </div><!-- /.property-filters-dialog -->
 
                 </form>
 
@@ -832,6 +883,96 @@ if ( $is_filtered_search ) {
 // Price slider + AJAX filtering
 document.addEventListener('DOMContentLoaded', function () {
   console.log('Pera Property archive JS loaded');
+
+  const filtersDialog = document.getElementById('property-filters-dialog');
+  const filtersToggle = document.querySelector('[data-filters-toggle]');
+  const filtersClose = filtersDialog ? filtersDialog.querySelector('[data-filters-close]') : null;
+  const filtersOverlay = filtersDialog ? filtersDialog.querySelector('[data-filters-overlay]') : null;
+  const bodyEl = document.body;
+  let previousOverflow = '';
+  let lastActiveElement = null;
+
+  bodyEl.classList.add('js-filters');
+
+  function getFocusableElements(container) {
+    if (!container) return [];
+    return Array.from(
+      container.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter(el => !el.hasAttribute('disabled'));
+  }
+
+  function openFiltersDialog() {
+    if (!filtersDialog) return;
+    lastActiveElement = document.activeElement;
+    filtersDialog.classList.add('is-open');
+    filtersDialog.setAttribute('aria-hidden', 'false');
+    if (filtersToggle) {
+      filtersToggle.setAttribute('aria-expanded', 'true');
+    }
+    previousOverflow = bodyEl.style.overflow;
+    bodyEl.style.overflow = 'hidden';
+    bodyEl.classList.add('has-open-dialog');
+
+    const focusables = getFocusableElements(filtersDialog);
+    if (focusables.length) {
+      focusables[0].focus();
+    } else {
+      filtersDialog.focus();
+    }
+
+    document.addEventListener('keydown', handleDialogKeydown);
+  }
+
+  function closeFiltersDialog() {
+    if (!filtersDialog) return;
+    filtersDialog.classList.remove('is-open');
+    filtersDialog.setAttribute('aria-hidden', 'true');
+    if (filtersToggle) {
+      filtersToggle.setAttribute('aria-expanded', 'false');
+    }
+    bodyEl.style.overflow = previousOverflow;
+    bodyEl.classList.remove('has-open-dialog');
+    document.removeEventListener('keydown', handleDialogKeydown);
+
+    if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+      lastActiveElement.focus();
+    } else if (filtersToggle) {
+      filtersToggle.focus();
+    }
+  }
+
+  function handleDialogKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeFiltersDialog();
+    }
+  }
+
+  if (filtersDialog && filtersToggle) {
+    filtersDialog.setAttribute('aria-hidden', 'true');
+
+    filtersToggle.addEventListener('click', function () {
+      if (filtersDialog.classList.contains('is-open')) {
+        closeFiltersDialog();
+      } else {
+        openFiltersDialog();
+      }
+    });
+  }
+
+  if (filtersClose) {
+    filtersClose.addEventListener('click', function () {
+      closeFiltersDialog();
+    });
+  }
+
+  if (filtersOverlay) {
+    filtersOverlay.addEventListener('click', function () {
+      closeFiltersDialog();
+    });
+  }
 
   function formatUSD(value) {
     return '$' + Number(value).toLocaleString();
