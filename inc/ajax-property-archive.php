@@ -20,24 +20,36 @@
  * - price_bounds (global + applied)
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-  exit;
-}
-
-/* ============================================================
-   Helpers
-   ============================================================ */
-
-if ( ! function_exists( 'pera_v2_filter_array_of_slugs' ) ) {
-  function pera_v2_filter_array_of_slugs( $raw ): array {
-    if ( ! is_array( $raw ) ) $raw = array();
-    $raw = array_map( 'wp_unslash', $raw );
-    $raw = array_map( 'sanitize_title', $raw );
-    $raw = array_values( array_filter( $raw ) );
-    return $raw;
-  }
-}
-
+if ( ! defined( 'ABSPATH' ) ) {  function pera_v2_add_term_counts_for_posts( array $post_ids, string $taxonomy ): array {
+    $counts = array();
+
+    if ( empty( $post_ids ) ) return $counts;
+
+    // Pull all term relationships for these posts in one go
+    $terms = wp_get_object_terms(
+      $post_ids,
+      $taxonomy,
+      array( 'fields' => 'all_with_object_id' )
+    );
+
+    if ( is_wp_error( $terms ) || empty( $terms ) ) {
+      return $counts;
+    }
+
+    foreach ( $terms as $t ) {
+      $slug = (string) $t->slug;
+      if ( ! isset( $counts[ $slug ] ) ) {
+        $counts[ $slug ] = array(
+          'name'  => (string) $t->name,
+          'count' => 0,
+        );
+      }
+      $counts[ $slug ]['count']++;
+    }
+
+    return $counts;
+  }
+}
 if ( ! function_exists( 'pera_v2_parse_beds_from_index' ) ) {
   /**
    * v2_index_flat example: "|1|2|3|"
@@ -155,11 +167,23 @@ if ( ! function_exists( 'pera_ajax_filter_properties_v2' ) ) {
           if ( $raw !== '' ) $min_price = max( 0, (float) $raw );
         }
         
-        if ( isset( $_POST['max_price'] ) ) {
-          $raw = trim( (string) wp_unslash( $_POST['max_price'] ) );
-          if ( $raw !== '' ) $max_price = max( 0, (float) $raw );
-        }
-        
+        if ( isset( $_POST['max_price'] ) ) {      $facet_args['posts_per_page'] = -1;
+      $facet_args['paged']          = 1;
+      $facet_args['fields']         = 'ids';
+      $facet_args['no_found_rows']  = true;
+
+      // For facets, ordering doesn't matter; strip meta_key/orderby just in case
+      unset( $facet_args['orderby'], $facet_args['order'], $facet_args['meta_key'] );
+
+      $facet_q  = new WP_Query( $facet_args );
+      $post_ids = ! empty( $facet_q->posts ) ? array_map( 'intval', (array) $facet_q->posts ) : array();
+      $max_facet_ids = 2000;
+      if ( count( $post_ids ) > $max_facet_ids ) {
+        if ( function_exists( 'pera_should_log_diag' ) && pera_should_log_diag() ) {
+          error_log( '[Pera diag] v2 facet post ID list truncated to prevent spikes.' );
+        }
+        $post_ids = array_slice( $post_ids, 0, $max_facet_ids );
+      }
         // Swap if reversed (only when both provided)
         if ( $min_price > 0 && $max_price > 0 && $min_price > $max_price ) {
           $tmp       = $min_price;

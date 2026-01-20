@@ -5,7 +5,65 @@
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-error_log('ACTIVE CHILD THEME FUNCTIONS LOADED');
+if ( ! function_exists( 'pera_should_log_diag' ) ) {
+  function pera_should_log_diag(): bool {
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+      return true;
+    }
+
+    return isset( $_GET['diag'] ) && $_GET['diag'] === '1';
+  }
+}
+
+if ( ! function_exists( 'pera_log_diag' ) ) {
+  function pera_log_diag( string $stage ): void {
+    if ( ! pera_should_log_diag() ) {
+      return;
+    }
+
+    $uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+    $template = function_exists( 'get_page_template' ) ? (string) get_page_template() : '';
+    $is_ajax = function_exists( 'wp_doing_ajax' ) ? wp_doing_ajax() : false;
+    $is_rest = defined( 'REST_REQUEST' ) && REST_REQUEST;
+    $memory  = function_exists( 'memory_get_usage' ) ? memory_get_usage( true ) : 0;
+
+    $flags = array(
+      'archive' => function_exists( 'is_archive' ) && is_archive() ? '1' : '0',
+      'tax'     => function_exists( 'is_tax' ) && is_tax() ? '1' : '0',
+      'single'  => function_exists( 'is_singular' ) && is_singular() ? '1' : '0',
+      'home'    => function_exists( 'is_front_page' ) && is_front_page() ? '1' : '0',
+    );
+
+    error_log(
+      sprintf(
+        '[Pera diag] %s uri=%s template=%s ajax=%s rest=%s mem=%d flags=%s',
+        $stage,
+        $uri,
+        $template ?: 'n/a',
+        $is_ajax ? '1' : '0',
+        $is_rest ? '1' : '0',
+        (int) $memory,
+        wp_json_encode( $flags )
+      )
+    );
+  }
+}
+
+if ( pera_should_log_diag() ) {
+  error_log( '[Pera diag] theme functions loaded' );
+}
+
+add_action( 'init', function () {
+  pera_log_diag( 'init' );
+}, 1 );
+
+add_action( 'template_redirect', function () {
+  pera_log_diag( 'template_redirect' );
+}, 1 );
+
+add_action( 'wp_head', function () {
+  pera_log_diag( 'wp_head' );
+}, 1 );
 
 
 /**
@@ -838,9 +896,16 @@ function pera_ajax_filter_properties() {
         $facet_query = new WP_Query( $facet_args );
         
         if ( $facet_query->have_posts() ) {
-        
+
           $post_ids = array_map( 'intval', (array) $facet_query->posts );
-        
+          $max_facet_ids = 2000;
+          if ( count( $post_ids ) > $max_facet_ids ) {
+            if ( function_exists( 'pera_should_log_diag' ) && pera_should_log_diag() ) {
+              error_log( '[Pera diag] facet post ID list truncated to prevent spikes.' );
+            }
+            $post_ids = array_slice( $post_ids, 0, $max_facet_ids );
+          }
+
           // --- Min/max price across filtered set (fast SQL on postmeta + IN)
           global $wpdb;
         
@@ -1154,4 +1219,3 @@ add_action( 'init', function () {
     wp_update_term_count_now( $terms, 'bedrooms' );
   }
 }, 1 );*/
-
